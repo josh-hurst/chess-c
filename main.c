@@ -10,17 +10,17 @@ int resolveMoveInstructions(char* input, int *fromCoordinates, int *toCoordinate
     regmatch_t pmatch[5];
     regex_t regex;
     int compiled = regcomp(&regex, "([0-9]+),([0-9]+)->([0-9]+),([0-9]+)", REG_EXTENDED);
-    if (!compiled)
+    if (compiled)
         return 0;
     int regRes = regexec(&regex, input, (size_t) 5, pmatch, 0);
     regfree(&regex);
-    if (!regRes)
+    if (regRes)
         return 0;
 
-    fromCoordinates[0] = atoi(&input[pmatch[1].rm_so]);
-    fromCoordinates[1] = atoi(&input[pmatch[2].rm_so]);
-    toCoordinates[0] = atoi(&input[pmatch[3].rm_so]);
-    toCoordinates[1] = atoi(&input[pmatch[4].rm_so]);
+    fromCoordinates[0] = atoi(&input[pmatch[1].rm_so]) - 1;
+    fromCoordinates[1] = atoi(&input[pmatch[2].rm_so]) - 1;
+    toCoordinates[0] = atoi(&input[pmatch[3].rm_so]) - 1;
+    toCoordinates[1] = atoi(&input[pmatch[4].rm_so]) - 1;
     return 1;
 }
 
@@ -57,15 +57,23 @@ int main() {
     char turn = 'a'; // which team is going
     char *board = createBoard(turn);
     int printedLines = 0;
+    int moveSuccess = 1;
     while (1) {
-        int inCheck = isInCheck(board, turn);
-        printBoard(board, turn, inCheck);
-        printedLines += inCheck;
+        if (moveSuccess) {
+            int inCheck = isInCheck(board, turn);
+            printBoard(board, turn, inCheck);
+            printedLines += inCheck;
+        }
 
         int coordinates[4];
         int *fromCoordinates = coordinates;
         int *toCoordinates = coordinates + 2;
-        resolveUserInput(coordinates);
+        int success = resolveUserInput(coordinates);
+        if (!success) {
+            printf("Failed to read input.\n");
+            printedLines++;
+            continue;
+        }
         printedLines++;
 
         char pieceTaken[2];
@@ -74,7 +82,11 @@ int main() {
         if (moveTo(board, fromPiece, toPiece, turn, pieceTaken)) {
             clearTerminal(&printedLines);
             switchTurn(&turn);
-        } else printedLines ++;
+            moveSuccess = 1;
+        } else {
+            printedLines ++;
+            moveSuccess = 0;
+        }
     }
     free(board);
     return 0;
