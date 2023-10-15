@@ -59,6 +59,14 @@ int isPathObstructed(char *board, char *from, char *to) {
     return 0;
 }
 
+int max(int a, int b) {
+    return a > b ? a : b;
+}
+
+int min(int a, int b) {
+    return a < b ? a : b;
+}
+
 int isValidMove(char *board, char *piece, char* to, int isTakingPiece, int noErr) {
     struct Piece pieceInfo = getPieceInfo(*piece);
     char type = piece[0];
@@ -102,7 +110,14 @@ int isValidMove(char *board, char *piece, char* to, int isTakingPiece, int noErr
             return 0;
         }
     } else { // other (assumed knight)
-        return 0;
+        int maxMoveRule = max(pieceInfo.sMove, pieceInfo.pMove);
+        int minMoveRule = min(pieceInfo.sMove, pieceInfo.pMove);
+        int maxMove = max(abs(moveV), abs(moveH));
+        int minMove = min(abs(moveV), abs(moveH));
+        if (minMove == minMoveRule && maxMove == maxMoveRule) {
+            return 1;
+        } else
+            return 0;
     }
     return 1;
 }
