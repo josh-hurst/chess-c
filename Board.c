@@ -158,23 +158,23 @@ void undoMove(char *board, char* from, char* piece, char *pieceTaken) {
 }
 
 void printBoard(char *board, char turn, int inCheck) {
-    printf("\t\t%s%c's turn\n" RESET, turn == 'a' ? RED : (turn == 'b' ? BLU : WHT), turn);
+    printf("\t%s%c's turn\n" RESET, turn == 'a' ? GRN : (turn == 'b' ? BLU : WHT), turn);
     if (inCheck) {
-        printf(RED "\t\tCHECK\n");
+        printf(RED "\tCHECK\n");
     }
-    printf("        " ANSI_UNDERLINED_PRE);
+    printf(" " ANSI_UNDERLINED_PRE "  ");
     for (int col = 0; col < 8; col++) {
-        printf("%d  ", col);
+        printf("%d  ", col + 1);
     }
     printf(ANSI_UNDERLINED_POST "\n");
     for (int row = 0; row < 8; row++) {
-        printf(" %c    %d| ", (row == 3 ? 'a' : ' '), row);
+        printf("%d│ ", row + 1);
         for (int col = 0; col < 8; col++) {
             char* piece = getPiece(board, row, col);
             char owner = piece[1];
-            printf("%s%c  " RESET, owner == 'a' ? RED : (owner == 'b' ? BLU : WHT), *piece);
+            printf("%s%c  " RESET, owner == 'a' ? GRN : (owner == 'b' ? BLU : WHT), *piece);
         }
-        printf("  %s", row == 3 ? "b" : "");
+        // printf("  %s", row == 3 ? "b" : "");
         printf("\n");
     }
 }
