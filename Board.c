@@ -194,7 +194,6 @@ char* createBoard(char turn) {
     memset(board, '_', sizeof(char) * 8 * 16);
     createTeamLayout(board, 'a');
     createTeamLayout(board, 'b');
-    printBoard(board, turn, 0);
     return board;
 }
 
