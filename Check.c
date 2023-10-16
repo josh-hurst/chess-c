@@ -3,12 +3,10 @@
 
 int isInCheck(char **board, char team) {
     char attackingTeam = team == 'b' ? 'a' : 'b';
-    char **king;
-    char **teamCells[16];
-    int numPieces;
-    getTeamCells(board, attackingTeam, teamCells, &numPieces);
-    getTeamKing(board, team, &king);
-    for (int i = 0; i < numPieces; i++) {
+    Team teamBoard = getTeamBoard(board, attackingTeam);
+    char **king = getTeamBoard(board, team).king;
+    char ***teamCells = teamBoard.cells;
+    for (int i = 0; i < teamBoard.len; i++) {
         char** cell = teamCells[i];
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -22,13 +20,10 @@ int isInCheck(char **board, char team) {
 }
 
 int isInCheckMate(char **board, char team) {
-    char **teamCells[16];
-    char **king;
-    int numPieces;
-    getTeamCells(board, team, teamCells, &numPieces);
-    getTeamKing(board, team, &king);
+    Team teamBoard = getTeamBoard(board, team);
+    char ***teamCells = teamBoard.cells;
     
-    for (int i = 0; i < numPieces; i++) {
+    for (int i = 0; i < teamBoard.len; i++) {
         char **cell = teamCells[i];
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {

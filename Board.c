@@ -154,6 +154,8 @@ int moveTo(char **board, char** fromCell, char** toCell, char team, char **piece
 
     char fromPieceOwner = (*fromCell)[1];
     if (fromPieceOwner != team) {
+        if (!simulate)
+            printf("That's not your piece!\n");
         return 1;
     }
 
@@ -165,7 +167,7 @@ int moveTo(char **board, char** fromCell, char** toCell, char team, char **piece
         }
     }
 
-    if (!isValidMove(board, fromCell, toCell, takingPiece, 0)) {
+    if (!isValidMove(board, fromCell, toCell, takingPiece, simulate)) {
         return 1;
     }
 
@@ -184,7 +186,7 @@ int moveTo(char **board, char** fromCell, char** toCell, char team, char **piece
             *pieceTaken = 0;
 
         if (inCheck) {
-            if (1 || !simulate)
+            if (!simulate)
                 printf("Can't move into check!\n");
             return 2;
         } else {
@@ -248,38 +250,24 @@ struct Board createBoard(char turn) {
     return board;
 }
 
-void getTeamKing(char **board, char team, char ***king) {
+Team getTeamBoard(char **board, char team) {
+    Team teamBoard = {{}, 0, 0};
+    int *len = &teamBoard.len;
     for (int column = 0; column < 8; column++) {
         for (int row = 0; row < 8; row++) {
             char **cell = getCell(board, row, column);
             char *piece = *cell;
             if (piece) {
-                char pieceOwner = piece[1];
                 char pieceType = piece[0];
-                if (pieceOwner == team && pieceType == 'k') {
-                    *king = cell;
+                char pieceOwner = piece[1];
+                if (pieceOwner == team) {
+                    if (pieceType == 'k')
+                        teamBoard.king = cell;
+                    teamBoard.cells[*len] = cell;
+                    (*len)++;
                 }
             }
         }
     }
-}
-
-void getTeamCells(char **board, char team, char **teamCells[16], int *numPieces) {
-    *numPieces = 0;
-    for (int column = 0; column < 8; column++) {
-        for (int row = 0; row < 8; row++) {
-            char **cell = getCell(board, row, column);
-            char *piece = *cell;
-            if (*cell) {
-                if (*cell + 1) {
-                    char pieceOwner = piece[1];
-                    if (pieceOwner == team) {
-                        teamCells[*numPieces] = cell;
-                        (*numPieces)++;
-                    }
-                } else {
-                }
-            }
-        }
-    }
+    return teamBoard;
 }

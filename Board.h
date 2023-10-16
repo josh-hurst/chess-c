@@ -1,6 +1,12 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+typedef struct Team {
+    char **cells[16];
+    char **king;
+    int len;
+} Team;
+
 typedef struct CellCoordinate {
     int row;
     int column;
@@ -20,8 +26,7 @@ char* getPiece(char **board, int row, int column);
 void setPiece(char **board, char* piece, char newPiece, char team, char flags);
 struct CellCoordinate getCoordinate(char **board, char **cell);
 
-void getTeamCells(char **board, char team, char **teamPieces[16], int *numPieces);
-void getTeamKing(char **board, char team, char ***king);
+Team getTeamBoard(char **board, char team);
 
 int isPathObstructed(char **board, char **fromCell, char **toCell);
 int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece, int noErr);
