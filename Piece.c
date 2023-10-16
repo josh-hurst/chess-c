@@ -1,6 +1,10 @@
 #include <math.h>
 #include "Piece.h"
 
+const int PIECE_SIZE = 3;
+
+const int HAS_MOVED = 0b00000001;
+
 struct Pieces {
     struct Piece k;
     struct Piece q;

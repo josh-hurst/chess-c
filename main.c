@@ -48,6 +48,7 @@ void deleteLine() {
 }
 
 void clearTerminal(int *printedLines) {
+    if (1) return;
     for (int i = 0; i < 10 + *printedLines; i++)
         deleteLine();
     *printedLines = 0;
@@ -76,7 +77,7 @@ int main() {
         }
         printedLines++;
 
-        char pieceTaken[2];
+        char pieceTaken[3];
         char *fromPiece = getPiece(board, fromCoordinates[1], fromCoordinates[0]);
         char *toPiece = getPiece(board, toCoordinates[1], toCoordinates[0]);
         if (moveTo(board, fromPiece, toPiece, turn, pieceTaken)) {

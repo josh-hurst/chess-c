@@ -2,26 +2,28 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include "Board.h"
 #include "Escape.h"
 #include "Piece.h"
+#include "Check.h"
 
 int pieceExists(char *piece) {
     return *piece != '_';
 }
 
 char* getPiece(char *board, int row, int column) {
-    char* pRow = board + column * 16;
-    char* piece = pRow + row * 2;
+    char* pRow = board + column * 8 * PIECE_SIZE;
+    char* piece = pRow + row * PIECE_SIZE;
     return piece;
 }
 
-void setPiece(char *board, char* piece, char newPiece, char team) {
+void setPiece(char *board, char* piece, char newPiece, char team, char flags) {
     *piece = newPiece;
     *(piece + 1) = team;
 }
 
 void getCoordinate(char *board, char* piece, char coordinate[2]) {
-    double idx = (piece - board) * 0.5;
+    double idx = (piece - board) / (double)PIECE_SIZE;
     int row = floor((int)idx % 8);
     int column = floor(idx / 8.0);
 
@@ -29,7 +31,7 @@ void getCoordinate(char *board, char* piece, char coordinate[2]) {
     coordinate[1] = column;
 }
 
-void setCoordinate(char *board, int row, int column, char newPiece, char team) {
+void setCoordinate(char *board, int row, int column, char newPiece, char team, char flags) {
     char *piece = getPiece(board, row, column);
     *piece = newPiece;
     *(piece + 1) = team;
@@ -67,6 +69,10 @@ int min(int a, int b) {
     return a < b ? a : b;
 }
 
+int isPawnsFirstMove(char *piece) {
+    return !(piece[2] & HAS_MOVED);
+}
+
 int isValidMove(char *board, char *piece, char* to, int isTakingPiece, int noErr) {
     struct Piece pieceInfo = getPieceInfo(*piece);
     char type = piece[0];
@@ -87,7 +93,7 @@ int isValidMove(char *board, char *piece, char* to, int isTakingPiece, int noErr
             return 0;
         }
         int rep = abs(moveV);
-        if (pieceInfo.dMove >= rep || (type == 'p' && isTakingPiece)) {
+        if (pieceInfo.dMove >= rep || (type == 'p' && isTakingPiece && rep == 1)) {
             if (pieceInfo.fwdOnly && moveH * teamDir < 0) {
                 return 0;
             }
@@ -96,16 +102,23 @@ int isValidMove(char *board, char *piece, char* to, int isTakingPiece, int noErr
             return 0;
         }
     } else if (moveV == 0 || moveH == 0) { // straight move // todo: first move 2 for pawn
+        if (type == 'p' && isTakingPiece) {
+            if (!noErr) {
+                printf("Pawn can only take diagonally!");
+                return 0;
+            }
+        }
         if (isPathObstructed(board, piece, to)) {
             if (!noErr)
                 printf("View obstructed: ");
             return 0;
         }
         int rep = moveV ? moveV : moveH;
-        if (pieceInfo.sMove >= abs(rep)) {
+        if ((isPawnsFirstMove(piece) ? 2 : pieceInfo.sMove) >= abs(rep)) {
             if (pieceInfo.fwdOnly && rep * teamDir < 0) {
                 return 0;
             }
+            return 1;
         } else {
             return 0;
         }
@@ -132,7 +145,7 @@ int canTakePiece(char *board, char* pieceA, char* pieceB) {
     return 1;
 }
 
-int moveTo(char *board, char* piece, char* to, char team, char pieceTaken[2]) {
+int moveTo(char *board, char* piece, char* to, char team, char pieceTaken[3]) {
     if (!pieceExists(piece)) {
         printf("There's no piece there!\n");
         return 0;
@@ -157,18 +170,31 @@ int moveTo(char *board, char* piece, char* to, char team, char pieceTaken[2]) {
     }
     pieceTaken[0] = to[0];
     pieceTaken[1] = to[1];
+    pieceTaken[2] = to[2];
     char name = *piece;
-    setPiece(board, piece, '_', '_');
-    setPiece(board, to, name, team);
+    char flags = piece[2];
+    setPiece(board, piece, '_', '_', 0);
+    setPiece(board, to, name, team, flags);
+    if (isInCheck(board, team)) {
+        setPiece(board, piece, name, team, flags);
+        setPiece(board, to, pieceTaken[0], pieceTaken[1], pieceTaken[2]);
+        pieceTaken[0] = 0;
+        pieceTaken[1] = 0;
+        pieceTaken[2] = 0;
+        printf("Can't move into check!\n");
+        return 0;
+    } else {
+        to[2] |= HAS_MOVED;
+    }
     return 1;
 }
 
 void undoMove(char *board, char* from, char* piece, char *pieceTaken) {
-    setPiece(board, from, *piece, piece[1]);
+    setPiece(board, from, *piece, piece[1], piece[2]);
     if (pieceExists(piece)) {
-        setPiece(board, piece, pieceTaken[0], pieceTaken[1]);
+        setPiece(board, piece, pieceTaken[0], pieceTaken[1], pieceTaken[2]);
     } else {
-        setPiece(board, piece, '_', '_');
+        setPiece(board, piece, '_', '_', 0);
     }
 }
 
@@ -196,17 +222,20 @@ void printBoard(char *board, char turn, int inCheck) {
 
 void createTeamLayout(char *board, char team) {
     static char layout[] = "rnbqkbnr";
-    for (int col = 0; col < 2; col++) {
+    for (int col = 0; col < 4; col++) {
         for (int row = 0; row < 8; row++) {
-            char piece = col == 0 ? layout[row] : 'p';
-            setCoordinate(board, row, team == 'a' ? col : 7 - col, piece, team);
+            if (col < 2) {
+                char piece = col == 0 ? layout[row] : 'p';
+                setCoordinate(board, row, team == 'a' ? col : 7 - col, piece, team, 0);
+            } else {
+                setCoordinate(board, row, team == 'a' ? col : 7 - col, '_', '_', 0);
+            }
         }
     }
 }
 
 char* createBoard(char turn) {
-    char *board = malloc(sizeof(char) * 8 * 16); // each piece is 2 chars, one for piece id, one for team id
-    memset(board, '_', sizeof(char) * 8 * 16);
+    char *board = malloc(sizeof(char) * 8 * 8 * PIECE_SIZE); // each piece is 3 chars, one for piece id, one for team id
     createTeamLayout(board, 'a');
     createTeamLayout(board, 'b');
     return board;
