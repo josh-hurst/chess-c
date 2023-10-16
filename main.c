@@ -6,35 +6,60 @@
 #include "Board.h"
 #include "Check.h"
 
-int resolveMoveInstructions(char* input, int *fromCoordinates, int *toCoordinates) {
+struct MoveInstructions {
+    int success;
+    CellCoordinate from;
+    CellCoordinate to;
+};
+
+struct InputResponse {
+    struct MoveInstructions moveInstructions;
+};
+
+struct MoveInstructions resolveMoveInstructions(char* input) {
+    struct MoveInstructions moveInstructions = {0};
     regmatch_t pmatch[5];
     regex_t regex;
     int compiled = regcomp(&regex, "([0-9]+),([0-9]+)->([0-9]+),([0-9]+)", REG_EXTENDED);
-    if (compiled)
-        return 0;
+    if (compiled) {
+        return moveInstructions;
+    }
+
     int regRes = regexec(&regex, input, (size_t) 5, pmatch, 0);
     regfree(&regex);
-    if (regRes)
-        return 0;
+    if (regRes) {
+        return moveInstructions;
+    }
 
-    fromCoordinates[0] = atoi(&input[pmatch[1].rm_so]) - 1;
-    fromCoordinates[1] = atoi(&input[pmatch[2].rm_so]) - 1;
-    toCoordinates[0] = atoi(&input[pmatch[3].rm_so]) - 1;
-    toCoordinates[1] = atoi(&input[pmatch[4].rm_so]) - 1;
-    return 1;
+    CellCoordinate fromCell = {
+        .row = atoi(&input[pmatch[2].rm_so]) - 1,
+        .column = atoi(&input[pmatch[1].rm_so]) - 1
+    };
+    CellCoordinate toCell = {
+        .row = atoi(&input[pmatch[4].rm_so]) - 1,
+        .column = atoi(&input[pmatch[3].rm_so]) - 1
+    };
+
+    moveInstructions.from = fromCell;
+    moveInstructions.to = toCell;
+    moveInstructions.success = 1;
+
+    return moveInstructions;
 }
 
-int resolveUserInput(int *coordinates) {
+struct InputResponse resolveUserInput(int *coordinates) {
+    struct InputResponse inputResponse = {};
     char input[9]; // max expected input length is 9
     scanf("%s", input);
 
     if (strcmp(input, "q") == 0) {
-        return 0;
+        return inputResponse;
     } else {
-        if (resolveMoveInstructions(input, coordinates, coordinates + 2))
-            return 1;
-        else
-            return 0;
+        struct MoveInstructions moveInstructions = resolveMoveInstructions(input);
+        if (moveInstructions.success) {
+            inputResponse.moveInstructions = moveInstructions;
+        }
+        return inputResponse;
     }
 }
 
@@ -48,7 +73,6 @@ void deleteLine() {
 }
 
 void clearTerminal(int *printedLines) {
-    return;
     for (int i = 0; i < 10 + *printedLines; i++)
         deleteLine();
     *printedLines = 0;
@@ -69,19 +93,19 @@ int main() {
         }
 
         int coordinates[4];
-        int *fromCoordinates = coordinates;
-        int *toCoordinates = coordinates + 2;
-        int success = resolveUserInput(coordinates);
-        if (!success) {
+        struct InputResponse inputResponse = resolveUserInput(coordinates);
+        struct MoveInstructions moveInstructions = inputResponse.moveInstructions;
+        printedLines++;
+        if (!moveInstructions.success) {
             printf("Failed to read input.\n");
             printedLines++;
+            moveSuccess = 0;
             continue;
         }
-        printedLines++;
 
         char *pieceTaken;
-        char **fromCell = getCell(layout, fromCoordinates[1], fromCoordinates[0]);
-        char **toCell = getCell(layout, toCoordinates[1], toCoordinates[0]);
+        char **fromCell = getCell(layout, moveInstructions.from.row, moveInstructions.from.column);
+        char **toCell = getCell(layout, moveInstructions.to.row, moveInstructions.to.column);
         if (moveTo(layout, fromCell, toCell, turn, &pieceTaken)) {
             clearTerminal(&printedLines);
             switchTurn(&turn);

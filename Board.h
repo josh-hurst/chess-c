@@ -19,7 +19,6 @@ void setCell(char **board, int row, int column, char *piece);
 char* getPiece(char **board, int row, int column);
 void setPiece(char **board, char* piece, char newPiece, char team, char flags);
 struct CellCoordinate getCoordinate(char **board, char **cell);
-// void setCoordinate(char **board, int row, int column, char *piece);
 
 void getTeamCells(char **board, char team, char **teamPieces[16], int *numPieces);
 void getTeamKing(char **board, char team, char ***king);

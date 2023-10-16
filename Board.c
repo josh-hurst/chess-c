@@ -54,10 +54,8 @@ int isPathObstructed(char **board, char **fromCell, char **toCell) {
     for (int i = 1; i < moves; i++) {
         int lookCol = fromCoordinate.column + i * signV;
         int lookRow = fromCoordinate.row + i * signH;
-        // printf("%d, %d", lookRow, lookCol);
         char **obstruction = getCell(board, lookRow, lookCol);
         if (*obstruction) {
-            // printf("obstructed. %c %c %d %d", *obstruction[0], *obstruction[1], lookRow, lookCol);
             return 1;
         }
     }
@@ -86,7 +84,7 @@ int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece,
     int diffCol = toCoordinate.column - fromCoordinate.column;
     int diffRow = toCoordinate.row - fromCoordinate.row;
     int teamDir = team == 'a' ? 1 : -1;
-    // printf("%d, %d", diffRow, diffCol);
+
     if (abs(diffCol) == abs(diffRow)) { // diagonal move // todo: catches for pawn
         if (isPathObstructed(board, fromCell, toCell)) {
             if (!noErr)
@@ -187,21 +185,10 @@ int moveTo(char **board, char** fromCell, char** toCell, char team, char **piece
         printf("Can't move into check!\n");
         return 0;
     } else {
-        printf("%d", (*toCell)[2]);
         (*toCell)[2] |= HAS_MOVED;
-        printf("%d", (*toCell)[2]);
     }
     return 1;
 }
-
-// void undoMove(char **board, char* from, char* piece, char *pieceTaken) {
-//     setPiece(board, from, *piece, piece[1], piece[2]);
-//     if (pieceExists(piece)) {
-//         setPiece(board, piece, pieceTaken[0], pieceTaken[1], pieceTaken[2]);
-//     } else {
-//         setPiece(board, piece, '_', '_', 0);
-//     }
-// }
 
 void printBoard(char **board, char turn, int inCheck) {
     printf("\t%s%c's turn\n" RESET, turn == 'a' ? GRN : (turn == 'b' ? BLU : WHT), turn);
@@ -224,7 +211,6 @@ void printBoard(char **board, char turn, int inCheck) {
             } else
                 printf("_  ");
         }
-        // printf("  %s", row == 3 ? "b" : "");
         printf("\n");
     }
 }
@@ -240,7 +226,6 @@ void createTeamLayout(char **board, char team, char *pieces) {
             piece[1] = team;
             piece[2] = 0;
             board[team == 'a' ? idx : 63 - idx] = piece;
-            // setCell(board, row, team == 'a' ? col : 7 - col, piece);
         }
     }
 }
