@@ -88,8 +88,13 @@ int main() {
     while (1) {
         if (moveSuccess) {
             int inCheck = isInCheck(layout, turn);
-            printBoard(layout, turn, inCheck);
+            int inCheckMate = inCheck ? isInCheckMate(layout, turn) : 0;
+            printBoard(layout, turn, inCheck, inCheckMate);
             printedLines += inCheck;
+
+            if (inCheckMate) {
+                break;
+            }
         }
 
         int coordinates[4];
@@ -106,7 +111,7 @@ int main() {
         char *pieceTaken;
         char **fromCell = getCell(layout, moveInstructions.from.row, moveInstructions.from.column);
         char **toCell = getCell(layout, moveInstructions.to.row, moveInstructions.to.column);
-        if (moveTo(layout, fromCell, toCell, turn, &pieceTaken)) {
+        if (!moveTo(layout, fromCell, toCell, turn, &pieceTaken, 0)) {
             clearTerminal(&printedLines);
             switchTurn(&turn);
             moveSuccess = 1;

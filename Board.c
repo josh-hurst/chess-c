@@ -92,8 +92,9 @@ int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece,
             return 0;
         }
         int rep = abs(diffCol);
-        if (pieceInfo.dMove >= rep || (type == 'p' && isTakingPiece && rep == 1)) {
-            if (pieceInfo.fwdOnly && diffRow * teamDir < 0) {
+        int pawnCanTakeDiagonally = type == 'p' && isTakingPiece && rep == 1;
+        if (pieceInfo.dMove >= rep || pawnCanTakeDiagonally) {
+            if (pieceInfo.fwdOnly && ((diffCol * teamDir < 0))) {
                 return 0;
             }
             return 1;
@@ -114,7 +115,7 @@ int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece,
         }
         int rep = diffCol ? diffCol : diffRow;
         if ((isPawnsFirstMove(piece) ? 2 : pieceInfo.sMove) >= abs(rep)) {
-            if (pieceInfo.fwdOnly && rep * teamDir < 0) {
+            if (pieceInfo.fwdOnly && ((rep * teamDir < 0) || abs(diffRow) > 0)) {
                 return 0;
             }
             return 1;
@@ -129,7 +130,7 @@ int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece,
         if (minMove == minMoveRule && maxMove == maxMoveRule) {
             return 1;
         } else
-            return 0;
+        return 0;
     }
     return 1;
 }
@@ -144,55 +145,62 @@ int canTakePiece(char **board, char* pieceA, char* pieceB) {
     return 1;
 }
 
-int moveTo(char **board, char** fromCell, char** toCell, char team, char **pieceTaken) {
+int moveTo(char **board, char** fromCell, char** toCell, char team, char **pieceTaken, int simulate) {
     if (!*fromCell) {
-        printf("There's no piece there!\n");
-        return 0;
+        if (!simulate)
+            printf("There's no piece there!\n");
+        return 1;
     }
 
     char fromPieceOwner = (*fromCell)[1];
     if (fromPieceOwner != team) {
-        printf("Not your piece!\n");
-        return 0;
+        return 1;
     }
 
     int takingPiece = 0;
     if (*toCell) {
         takingPiece = canTakePiece(board, *fromCell, *toCell);
         if (!takingPiece) {
-            printf("Can't move there!\n");
-            return 0;
+            return 1;
         }
     }
 
     if (!isValidMove(board, fromCell, toCell, takingPiece, 0)) {
-        printf("Not a valid move!\n");
-        return 0;
+        return 1;
     }
 
-    
+    char *toPiece = *toCell;
+    char *fromPiece = *fromCell;
     if (*toCell)
         *pieceTaken = *toCell;
 
     *toCell = *fromCell;
     *fromCell = 0;
-    if (isInCheck(board, team)) {
-        *fromCell = *toCell;
-        *toCell = *pieceTaken;
+    int inCheck = isInCheck(board, team);
+    if (simulate || inCheck) {
+        *fromCell = fromPiece;
+        *toCell = toPiece;
         if (*pieceTaken)
-            *pieceTaken = NULL;
+            *pieceTaken = 0;
 
-        printf("Can't move into check!\n");
-        return 0;
+        if (inCheck) {
+            if (1 || !simulate)
+                printf("Can't move into check!\n");
+            return 2;
+        } else {
+            return 0;
+        }
     } else {
         (*toCell)[2] |= HAS_MOVED;
     }
-    return 1;
+    return 0;
 }
 
-void printBoard(char **board, char turn, int inCheck) {
+void printBoard(char **board, char turn, int inCheck, int inCheckMate) {
     printf("\t%s%c's turn\n" RESET, turn == 'a' ? GRN : (turn == 'b' ? BLU : WHT), turn);
-    if (inCheck) {
+    if (inCheckMate) {
+        printf(RED "\tCHECK MATE");
+    } else if (inCheck) {
         printf(RED "\tCHECK\n");
     }
     printf(" " ANSI_UNDERLINED_PRE "  ");
@@ -209,7 +217,7 @@ void printBoard(char **board, char turn, int inCheck) {
                 char type = piece[0], owner = piece[1];
                 printf("%s%c  " RESET, owner == 'a' ? GRN : (owner == 'b' ? BLU : WHT), type);
             } else
-                printf("_  ");
+            printf("_  ");
         }
         printf("\n");
     }
@@ -262,11 +270,14 @@ void getTeamCells(char **board, char team, char **teamCells[16], int *numPieces)
         for (int row = 0; row < 8; row++) {
             char **cell = getCell(board, row, column);
             char *piece = *cell;
-            if (piece) {
-                char pieceOwner = piece[1];
-                if (pieceOwner == team) {
-                    teamCells[*numPieces] = cell;
-                    (*numPieces)++;
+            if (*cell) {
+                if (*cell + 1) {
+                    char pieceOwner = piece[1];
+                    if (pieceOwner == team) {
+                        teamCells[*numPieces] = cell;
+                        (*numPieces)++;
+                    }
+                } else {
                 }
             }
         }

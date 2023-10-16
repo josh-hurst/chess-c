@@ -27,12 +27,12 @@ int isPathObstructed(char **board, char **fromCell, char **toCell);
 int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece, int noErr);
 int canTakePiece(char **board, char* pieceA, char* pieceB);
 
-int moveTo(char **board, char** fromCell, char** toCell, char team, char **pieceTaken);
+int moveTo(char **board, char** fromCell, char** toCell, char team, char **pieceTaken, int simulate);
 void undoMove(char **board, char* from, char* piece, char *pieceTaken);
 
 void createTeamLayout(char **board, char team, char *pieces);
 struct Board createBoard(char turn);
 
-void printBoard(char **board, char turn, int inCheck);
+void printBoard(char **board, char turn, int inCheck, int inCheckMate);
 
 #endif
