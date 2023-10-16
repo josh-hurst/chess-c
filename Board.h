@@ -1,26 +1,39 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+typedef struct CellCoordinate {
+    int row;
+    int column;
+} CellCoordinate;
+
+struct Board {
+    char** layout;
+    char* teamA;
+    char* teamB;
+};
+
 int pieceExists(char *piece);
 
-char* getPiece(char *board, int row, int column);
-void setPiece(char *board, char* piece, char newPiece, char team, char flags);
-void getCoordinate(char *board, char* piece, char coordinate[2]);
-void setCoordinate(char *board, int row, int column, char newPiece, char team, char flags);
+char** getCell(char **board, int row, int column);
+void setCell(char **board, int row, int column, char *piece);
+char* getPiece(char **board, int row, int column);
+void setPiece(char **board, char* piece, char newPiece, char team, char flags);
+struct CellCoordinate getCoordinate(char **board, char **cell);
+// void setCoordinate(char **board, int row, int column, char *piece);
 
-void getTeamPieces(char *board, char team, char *teamPieces[16], int *numPieces);
-void getTeamKing(char *board, char team, char **king);
+void getTeamCells(char **board, char team, char **teamPieces[16], int *numPieces);
+void getTeamKing(char **board, char team, char ***king);
 
-int isPathObstructed(char *board, char *from, char *to);
-int isValidMove(char *board, char *piece, char* to, int isTakingPiece, int noErr);
-int canTakePiece(char *board, char* pieceA, char* pieceB);
+int isPathObstructed(char **board, char **fromCell, char **toCell);
+int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece, int noErr);
+int canTakePiece(char **board, char* pieceA, char* pieceB);
 
-int moveTo(char *board, char* piece, char* to, char team, char pieceTaken[3]);
-void undoMove(char *board, char* from, char* piece, char *pieceTaken);
+int moveTo(char **board, char** fromCell, char** toCell, char team, char **pieceTaken);
+void undoMove(char **board, char* from, char* piece, char *pieceTaken);
 
-void createTeamLayout(char *board, char team);
-char* createBoard(char turn);
+void createTeamLayout(char **board, char team, char *pieces);
+struct Board createBoard(char turn);
 
-void printBoard(char *board, char turn, int inCheck);
+void printBoard(char **board, char turn, int inCheck);
 
 #endif

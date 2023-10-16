@@ -48,7 +48,7 @@ void deleteLine() {
 }
 
 void clearTerminal(int *printedLines) {
-    if (1) return;
+    return;
     for (int i = 0; i < 10 + *printedLines; i++)
         deleteLine();
     *printedLines = 0;
@@ -56,13 +56,15 @@ void clearTerminal(int *printedLines) {
 
 int main() {
     char turn = 'a'; // which team is going
-    char *board = createBoard(turn);
+    struct Board board = createBoard(turn);
+    char **layout = board.layout;
+    
     int printedLines = 0;
     int moveSuccess = 1;
     while (1) {
         if (moveSuccess) {
-            int inCheck = isInCheck(board, turn);
-            printBoard(board, turn, inCheck);
+            int inCheck = isInCheck(layout, turn);
+            printBoard(layout, turn, inCheck);
             printedLines += inCheck;
         }
 
@@ -77,10 +79,10 @@ int main() {
         }
         printedLines++;
 
-        char pieceTaken[3];
-        char *fromPiece = getPiece(board, fromCoordinates[1], fromCoordinates[0]);
-        char *toPiece = getPiece(board, toCoordinates[1], toCoordinates[0]);
-        if (moveTo(board, fromPiece, toPiece, turn, pieceTaken)) {
+        char *pieceTaken;
+        char **fromCell = getCell(layout, fromCoordinates[1], fromCoordinates[0]);
+        char **toCell = getCell(layout, toCoordinates[1], toCoordinates[0]);
+        if (moveTo(layout, fromCell, toCell, turn, &pieceTaken)) {
             clearTerminal(&printedLines);
             switchTurn(&turn);
             moveSuccess = 1;
@@ -89,6 +91,8 @@ int main() {
             moveSuccess = 0;
         }
     }
-    free(board);
+    free(board.layout);
+    free(board.teamA);
+    free(board.teamB);
     return 0;
 }
