@@ -95,18 +95,22 @@ int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece,
         int pawnCanTakeDiagonally = type == 'p' && isTakingPiece && rep == 1;
         if (pieceInfo.dMove >= rep || pawnCanTakeDiagonally) {
             if (pieceInfo.fwdOnly && ((diffCol * teamDir < 0))) {
+                if (!noErr)
+                    printf("Can only move forward!");
                 return 0;
             }
             return 1;
         } else {
+            if (!noErr)
+                printf("You can't move that way!");
             return 0;
         }
     } else if (diffCol == 0 || diffRow == 0) { // straight move // todo: first move 2 for pawn
         if (type == 'p' && isTakingPiece) {
             if (!noErr) {
                 printf("Pawn can only take diagonally!");
-                return 0;
             }
+            return 0;
         }
         if (isPathObstructed(board, fromCell, toCell)) {
             if (!noErr)
@@ -116,10 +120,14 @@ int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece,
         int rep = diffCol ? diffCol : diffRow;
         if ((isPawnsFirstMove(piece) ? 2 : pieceInfo.sMove) >= abs(rep)) {
             if (pieceInfo.fwdOnly && ((rep * teamDir < 0) || abs(diffRow) > 0)) {
+                if (!noErr)
+                    printf("You can't move that way!");
                 return 0;
             }
             return 1;
         } else {
+            if (!noErr)
+                printf("You can't move that far!");
             return 0;
         }
     } else { // other (assumed knight)
@@ -129,8 +137,11 @@ int isValidMove(char **board, char **fromCell, char **toCell, int isTakingPiece,
         int minMove = min(abs(diffCol), abs(diffRow));
         if (minMove == minMoveRule && maxMove == maxMoveRule) {
             return 1;
-        } else
-        return 0;
+        } else {
+            if (!noErr)
+                printf("You can't move there!");
+            return 0;
+        }
     }
     return 1;
 }
@@ -163,6 +174,8 @@ int moveTo(char **board, char** fromCell, char** toCell, char team, char **piece
     if (*toCell) {
         takingPiece = canTakePiece(board, *fromCell, *toCell);
         if (!takingPiece) {
+            if (!simulate)
+                printf("You can't take that piece!\n");
             return 1;
         }
     }
